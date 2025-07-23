@@ -37,21 +37,12 @@ tab1, tab2, tab3 = st.tabs(["📋 Certificate Status", "📚 Renewal Logs", "�
 
 with tab1:
     st.subheader("📋 Demo Certificate Status (Auto-Updates via ICA)")
-    cert_placeholder = st.empty()
-
-    # Simulated expiry countdown for UI
-    demo_start = time.time()
-    for i in range(3):  # Simulate refresh effect (optional visual)
-        elapsed = time.time() - demo_start
-        seconds_left = max(0, 60 - int(elapsed % 60))
-        expires_on = datetime.datetime.now() + datetime.timedelta(seconds=seconds_left)
-
-        with cert_placeholder.container():
-            st.markdown(f"**Domain:** `demo.smartcert.io`")
-            st.markdown(f"**Expires In:** `{seconds_left} seconds`")
-            st.markdown(f"**Expires On:** `{expires_on.strftime('%Y-%m-%d %H:%M:%S')}`")
-            st.info(f"🟢 Last renewed: `{current_log_time or 'N/A'}`")
-        time.sleep(5)
+    expires_on = datetime.datetime.now() + datetime.timedelta(seconds=60)
+    st.markdown(f"**Domain:** `demo.smartcert.io`")
+    st.markdown(f"**Expires In:** `~60 seconds`")  # Static text unless you want real countdown
+    st.markdown(f"**Expires On:** `{expires_on.strftime('%Y-%m-%d %H:%M:%S')}`")
+    st.success(f"✅ Last Renewed (from ICA): `{current_log_time or 'N/A'}`")
+    
 
     if st.button("🔁 Renew Certificate"):
         try:
