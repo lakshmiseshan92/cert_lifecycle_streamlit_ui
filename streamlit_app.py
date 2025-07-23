@@ -4,7 +4,7 @@ import pandas as pd
 import datetime
 import time
 
-API_URL = "http://localhost:5000"  # Replace with your Render Flask URL
+API_URL = "https://cert-lifecycle-flask-api.onrender.com"  # Replace with your Render Flask URL
 
 st.set_page_config(page_title="SmartCert Manager", layout="wide")
 st.title("🔐 Smart Certificate Lifecycle Manager – Demo Mode")
