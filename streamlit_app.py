@@ -3,20 +3,45 @@ import requests
 import pandas as pd
 import datetime
 import time
+import os
+import json
 
 API_URL = "https://cert-lifecycle-flask-api.onrender.com"  # Replace with your Render Flask URL
 
+# Optional: Path from env or default
+LOG_FILE = os.environ.get("RENEW_LOG_PATH", os.path.join(os.getcwd(), "renew_log.json"))
+
+def get_last_renewed():
+    if os.path.exists(LOG_FILE):
+        with open(LOG_FILE, "r") as f:
+            try:
+                data = json.load(f)
+                return data.get("last_renewed", "")
+            except:
+                return ""
+    return ""
+
+# Trigger auto-refresh only when new ICA renewal happens
+current_log_time = get_last_renewed()
+if "last_seen_renew_time" not in st.session_state:
+    st.session_state.last_seen_renew_time = current_log_time
+elif current_log_time != st.session_state.last_seen_renew_time:
+    st.session_state.last_seen_renew_time = current_log_time
+    st.experimental_rerun()  # ⛓️ rerun only once per renewal
+
+# UI setup
 st.set_page_config(page_title="SmartCert Manager", layout="wide")
 st.title("🔐 Smart Certificate Lifecycle Manager – Demo Mode")
 
 tab1, tab2, tab3 = st.tabs(["📋 Certificate Status", "📚 Renewal Logs", "📤 Export Report"])
 
 with tab1:
-    st.subheader("📋 Demo Certificate Status (Auto-Refresh)")
+    st.subheader("📋 Demo Certificate Status (Auto-Updates via ICA)")
     cert_placeholder = st.empty()
-    demo_start = time.time()
 
-    for i in range(3):  # Refresh for 3 intervals (5s each)
+    # Simulated expiry countdown for UI
+    demo_start = time.time()
+    for i in range(3):  # Simulate refresh effect (optional visual)
         elapsed = time.time() - demo_start
         seconds_left = max(0, 60 - int(elapsed % 60))
         expires_on = datetime.datetime.now() + datetime.timedelta(seconds=seconds_left)
@@ -25,6 +50,7 @@ with tab1:
             st.markdown(f"**Domain:** `demo.smartcert.io`")
             st.markdown(f"**Expires In:** `{seconds_left} seconds`")
             st.markdown(f"**Expires On:** `{expires_on.strftime('%Y-%m-%d %H:%M:%S')}`")
+            st.info(f"🟢 Last renewed: `{current_log_time or 'N/A'}`")
         time.sleep(5)
 
     if st.button("🔁 Renew Certificate"):
