@@ -6,9 +6,8 @@ import time
 import os
 import json
 
-API_URL = "https://cert-lifecycle-flask-api.onrender.com"  # Replace with your Render Flask URL
+API_URL = "https://cert-lifecycle-flask-api.onrender.com"
 
-# Optional: Path from env or default
 LOG_FILE = os.environ.get("RENEW_LOG_PATH", os.path.join(os.getcwd(), "renew_log.json"))
 
 def get_last_renewed():
@@ -21,28 +20,32 @@ def get_last_renewed():
                 return ""
     return ""
 
-# Trigger auto-refresh only when new ICA renewal happens
-current_log_time = get_last_renewed()
-if "last_seen_renew_time" not in st.session_state:
-    st.session_state.last_seen_renew_time = current_log_time
-elif current_log_time != st.session_state.last_seen_renew_time:
-    st.session_state.last_seen_renew_time = current_log_time
-    st.experimental_rerun()  # ⛓️ rerun only once per renewal
-
-# UI setup
+# UI config
 st.set_page_config(page_title="SmartCert Manager", layout="wide")
 st.title("🔐 Smart Certificate Lifecycle Manager – Demo Mode")
 
 tab1, tab2, tab3 = st.tabs(["📋 Certificate Status", "📚 Renewal Logs", "📤 Export Report"])
 
+# TAB 1: CERT STATUS (Auto-Refresh every 5s)
 with tab1:
+    # 🔁 Auto-refresh this tab every 5 seconds
+    st.markdown("<meta http-equiv='refresh' content='5'>", unsafe_allow_html=True)
+
     st.subheader("📋 Demo Certificate Status (Auto-Updates via ICA)")
     expires_on = datetime.datetime.now() + datetime.timedelta(seconds=60)
     st.markdown(f"**Domain:** `demo.smartcert.io`")
-    st.markdown(f"**Expires In:** `~60 seconds`")  # Static text unless you want real countdown
+    st.markdown(f"**Expires In:** `~60 seconds`")
     st.markdown(f"**Expires On:** `{expires_on.strftime('%Y-%m-%d %H:%M:%S')}`")
+
+    # ICA-triggered renewal check
+    current_log_time = get_last_renewed()
+    if "last_seen_renew_time" not in st.session_state:
+        st.session_state.last_seen_renew_time = current_log_time
+    elif current_log_time != st.session_state.last_seen_renew_time:
+        st.session_state.last_seen_renew_time = current_log_time
+        st.experimental_rerun()
+
     st.success(f"✅ Last Renewed (from ICA): `{current_log_time or 'N/A'}`")
-    
 
     if st.button("🔁 Renew Certificate"):
         try:
@@ -52,6 +55,7 @@ with tab1:
         except Exception as e:
             st.error(f"Failed to renew: {e}")
 
+# TAB 2: LOGS
 with tab2:
     st.subheader("📚 Renewal Logs")
     try:
@@ -64,6 +68,7 @@ with tab2:
     except:
         st.error("Error fetching logs.")
 
+# TAB 3: PDF Export
 with tab3:
     st.subheader("📤 Export Renewal Report")
     if st.button("Generate PDF Report"):
